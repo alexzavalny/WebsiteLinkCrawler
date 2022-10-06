@@ -1,12 +1,15 @@
 require 'mechanize'
-require "csv"
+require 'csv'
+require './stats.rb'
 
 # Web Crawler Class
 class Crawler
   attr_accessor :url
+  attr_reader :stats
 
   def initialize(url:)
     @url = url
+    @stats = Stats.new
   end
 
   def crawl_to_csv(csv)
@@ -16,7 +19,7 @@ class Crawler
   def write_to_csv(filename, links)
     CSV.open(filename, "w") do |csv|
       links.each do |link|
-        csv << [link.url, link.priority]
+        csv << [link]
       end
     end
   end
@@ -26,18 +29,18 @@ class Crawler
     index = 0
 
     while index < links.length
-      break if links.length > 100
       if under_domain?(links[index])
-
         new_links = crawl_links_from_page(links[index])
+        @stats.crawled += 1
         new_links.each do |new_link|
           clean_link = clean_url(new_link)
           links << clean_link unless links.include?(clean_link) || broken_url?(clean_link)
         end
-        puts links
+        @stats.collected = links.size
       end
 
       index += 1
+      puts @stats
     end
 
     links
@@ -54,9 +57,12 @@ class Crawler
   end
 
   def crawl_links_from_page(url)
+    puts "Crawling page: #{url}"
     mechanize = Mechanize.new
     page = mechanize.get(url)
     page.links.map(&:href)
+  rescue
+    []
   end
 
   def under_domain?(link)
