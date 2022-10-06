@@ -20,7 +20,7 @@ class Crawler
 
   def error_to_log(error)
     CSV.open(ERROR_LOG, "a") do |csv|
-      csv << error
+      csv << [error]
     end
   end
 
