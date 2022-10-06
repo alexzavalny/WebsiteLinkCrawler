@@ -7,6 +7,8 @@ class Crawler
   attr_accessor :url
   attr_reader :stats
 
+  ERROR_LOG = "errorlog.txt"
+
   def initialize(url:)
     @url = url
     @stats = Stats.new
@@ -14,6 +16,12 @@ class Crawler
 
   def crawl_to_csv(csv)
     write_to_csv(csv, crawl_all)
+  end
+
+  def error_to_log(error)
+    CSV.open(ERROR_LOG, "a") do |csv|
+      csv << error
+    end
   end
 
   def write_to_csv(filename, links)
@@ -56,12 +64,20 @@ class Crawler
     return true unless new_link.start_with?("http")
   end
 
+  def mechanize
+    @mechanize ||= begin
+      new_mech = Mechanize.new
+      new_mech.user_agent = 'Googlebot'
+      new_mech
+    end
+  end
+
   def crawl_links_from_page(url)
     puts "Crawling page: #{url}"
-    mechanize = Mechanize.new
     page = mechanize.get(url)
     page.links.map(&:href)
   rescue
+    error_to_log(url)
     []
   end
 
