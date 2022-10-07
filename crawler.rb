@@ -91,4 +91,5 @@ class Crawler
   end
 end
 
-Crawler.new(url: "https://oneride.eu/").crawl_to_csv("output.csv")
+Crawler.new(url: "https://oneride.eu/").crawl_to_csv("output_oneride.csv")
+#Crawler.new(url: "https://viensrats.lv/").crawl_to_csv("output_viensrats.csv")
