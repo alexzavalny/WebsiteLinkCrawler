@@ -1,21 +1,19 @@
 require 'mechanize'
 require 'csv'
+require 'xml-sitemap'
 require './stats.rb'
 
 # Web Crawler Class
 class Crawler
   attr_accessor :url
   attr_reader :stats
+  attr_reader :links
 
-  ERROR_LOG = "errorlog.txt"
+  ERROR_LOG = 'errorlog.txt'
 
   def initialize(url:)
     @url = url
     @stats = Stats.new
-  end
-
-  def crawl_to_csv(csv)
-    write_to_csv(csv, crawl_all)
   end
 
   def error_to_log(error)
@@ -24,16 +22,32 @@ class Crawler
     end
   end
 
-  def write_to_csv(filename, links)
+  def without_domain(link)
+    link['https://oneride.eu'.size, 100000000]
+  end
+
+  def write_to_sitemap(filename)
+    map = XmlSitemap::Map.new('oneride.eu', :secure => true) do |m|
+      CSV.open(filename, "w") do |csv|
+        @links.each do |link|
+          m.add without_domain(link), :updated => Date.today, :period => :weekly
+        end
+      end
+    end
+
+    map.render_to('./sitemap_new.xml')
+  end
+
+  def write_to_csv(filename)
     CSV.open(filename, "w") do |csv|
-      links.each do |link|
+      @links.each do |link|
         csv << [link]
       end
     end
   end
 
-  def crawl_all
-    links = [@url]
+  def crawl_all!
+    @links = [@url]
     index = 0
 
     while index < links.length
@@ -45,23 +59,25 @@ class Crawler
           links << clean_link unless links.include?(clean_link) || broken_url?(clean_link)
         end
         @stats.collected = links.size
+        break if @stats.crawled > 2
       end
 
       index += 1
       puts @stats
     end
-
-    links
   end
 
   def clean_url(url)
+    return "" if url.nil?
     return url if url.index("?") == -1
-
     url[0...url.index("?")]
   end
 
   def broken_url?(new_link)
     return true unless new_link.start_with?("http")
+    return true if new_link.end_with?(".jpg") || new_link.end_with?(".mp4")
+    return true if new_link.nil?
+    false
   end
 
   def mechanize
@@ -91,5 +107,8 @@ class Crawler
   end
 end
 
-Crawler.new(url: "https://oneride.eu/").crawl_to_csv("output_oneride.csv")
+crawler = Crawler.new(url: "https://oneride.eu/")
+crawler.crawl_all!
+crawler.write_to_csv("output_oneride.csv")
+crawler.write_to_sitemap("sitemap.xml")
 #Crawler.new(url: "https://viensrats.lv/").crawl_to_csv("output_viensrats.csv")
