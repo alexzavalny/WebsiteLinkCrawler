@@ -59,7 +59,6 @@ class Crawler
           links << clean_link unless links.include?(clean_link) || broken_url?(clean_link)
         end
         @stats.collected = links.size
-        break if @stats.crawled > 2
       end
 
       index += 1
