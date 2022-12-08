@@ -48,3 +48,4 @@ Backup[ ]of[ ]*.numbers/
 
 #don't commit generated sitemaps
 sitemap*
+errorlog.txt

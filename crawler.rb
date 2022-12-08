@@ -28,15 +28,12 @@ class Crawler
   end
 
   def write_to_sitemap(filename)
-    map = XmlSitemap::Map.new('oneride.eu', :secure => true) do |m|
-      CSV.open(filename, "w") do |csv|
-        @links.each do |link|
-          m.add without_domain(link), :updated => Date.today, :period => :weekly
-        end
+    map = XmlSitemap::Map.new(@url, :secure => true) do |m|
+      @links.each do |link|
+        m.add without_domain(link), :updated => Date.today, :period => :weekly
       end
     end
-
-    map.render_to('./sitemap_new.xml')
+    map.render_to(filename)
   end
 
   def write_to_csv(filename)
@@ -51,7 +48,7 @@ class Crawler
     @links = [@url]
     index = 0
 
-    while index < links.length
+    while index < links.length && index < 10
       if under_domain?(links[index])
         new_links = crawl_links_from_page(links[index])
         @stats.crawled += 1
