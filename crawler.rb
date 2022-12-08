@@ -9,6 +9,7 @@ class Crawler
   attr_reader :stats
   attr_reader :links
 
+  USER_AGENT = 'Googlebot'
   ERROR_LOG = 'errorlog.txt'
 
   def initialize(url:)
@@ -23,7 +24,7 @@ class Crawler
   end
 
   def without_domain(link)
-    link['https://oneride.eu'.size, 100000000]
+    link[@url.size - 1, -1]
   end
 
   def write_to_sitemap(filename)
@@ -82,7 +83,7 @@ class Crawler
   def mechanize
     @mechanize ||= begin
       new_mech = Mechanize.new
-      new_mech.user_agent = 'Googlebot'
+      new_mech.user_agent = USER_AGENT
       new_mech
     end
   end
@@ -105,9 +106,3 @@ class Crawler
     url
   end
 end
-
-crawler = Crawler.new(url: "https://oneride.eu/")
-crawler.crawl_all!
-crawler.write_to_csv("output_oneride.csv")
-crawler.write_to_sitemap("sitemap.xml")
-#Crawler.new(url: "https://viensrats.lv/").crawl_to_csv("output_viensrats.csv")
